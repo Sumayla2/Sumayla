@@ -84,7 +84,6 @@
     // Logout function
     logout: function() {
       localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(USER_KEY);
       window.dispatchEvent(new CustomEvent('auth_state_change', { detail: { authenticated: false } }));
     },
 
