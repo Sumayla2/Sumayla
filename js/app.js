@@ -290,12 +290,14 @@
         const currentPass = document.getElementById('settings-current-pwd').value;
         const newPass = document.getElementById('settings-new-pwd').value;
 
-        if (currentPass !== 'password123') {
+        const savedPassword = localStorage.getItem('crm_admin_password') || 'password123';
+        if (currentPass !== savedPassword) {
           alert('Current password verification failed.');
           return;
         }
 
-        alert('Password change mock successful!');
+        localStorage.setItem('crm_admin_password', newPass);
+        alert('Password updated successfully! Please use your new password next time you log in.');
         passwordForm.reset();
       });
     }
