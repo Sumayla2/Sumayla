@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin CRM Dashboard - WFH Submissions</title>
+  <meta name="description" content="Secure administration panel for monitoring and managing Work From Home survey submissions.">
+  
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Supabase JS Client SDK CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div id="app-container">
+
+    <!-- 1. LOGIN PANEL (Gated by Auth) -->
+    <div id="login-panel" class="auth-panel">
+      <div class="glass-card auth-card">
+        <div class="auth-header">
+          <div class="logo-icon" style="margin: 0 auto 1.25rem; width: 44px; height: 44px;">
+            <i data-lucide="shield-check" style="font-size: 1.2rem;"></i>
+          </div>
+          <h1>Admin Portal</h1>
+          <p>Sign in to manage survey submissions</p>
+        </div>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" class="input-field" placeholder="e.g. admin" required autocomplete="username">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="password">Password</label>
+            <input type="password" id="password" class="input-field" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+
+          <div id="login-error" style="color: var(--danger); font-size: 0.85rem; margin-bottom: 1.25rem; display: none; text-align: center;">
+            Invalid username or password.
+          </div>
+
+          <button type="submit" class="btn-primary" style="width: 100%;">
+            Sign In
+            <i data-lucide="log-in"></i>
+          </button>
+        </form>
+        
+        <div style="margin-top: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.8rem;">
+          Default Login: <strong style="color: var(--text-secondary);">admin</strong> / <strong style="color: var(--text-secondary);">password123</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. DASHBOARD SHELL PANEL -->
+    <div id="dashboard-shell">
+      
+      <!-- Collapsible Sidebar -->
+      <aside>
+        <div class="sidebar-header">
+          <div class="logo">
+            <div class="logo-icon">
+              <i data-lucide="layout-dashboard"></i>
+            </div>
+            <span>WFH Admin</span>
+          </div>
+          <button id="toggle-sidebar-btn" class="toggle-sidebar-btn collapsed-hide" title="Collapse Sidebar">
+            <i data-lucide="chevron-left" class="collapsed-hide"></i>
+          </button>
+        </div>
+
+        <ul class="sidebar-menu">
+          <li>
+            <a href="#dashboard" class="menu-item active">
+              <i data-lucide="home"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a href="#leads" class="menu-item">
+              <i data-lucide="users"></i>
+              <span>All Leads</span>
+            </a>
+          </li>
+          <li>
+            <a href="#analytics" class="menu-item">
+              <i data-lucide="bar-chart-3"></i>
+              <span>Analytics</span>
+            </a>
+          </li>
+          <li>
+            <a href="#settings" class="menu-item">
+              <i data-lucide="settings"></i>
+              <span>Settings</span>
+            </a>
+          </li>
+        </ul>
+
+        <div class="sidebar-footer">
+          <a href="#" id="logout-btn" class="menu-item" style="color: var(--danger);">
+            <i data-lucide="log-out"></i>
+            <span>Logout</span>
+          </a>
+        </div>
+      </aside>
+
+      <!-- Main Dashboard Panel -->
+      <main>
+        
+        <!-- Mobile Header Navigation -->
+        <div class="mobile-header">
+          <div class="logo">
+            <div class="logo-icon">
+              <i data-lucide="layout-dashboard"></i>
+            </div>
+            <span>WFH Admin</span>
+          </div>
+          <button id="hamburger-btn" class="hamburger-btn">
+            <i data-lucide="menu"></i>
+          </button>
+        </div>
+
+        <!-- Global Header Bar -->
+        <header>
+          <div class="page-title">
+            <h2 id="page-header-title">Dashboard Overview</h2>
+          </div>
+
+          <div class="header-actions">
+            
+            <!-- Real-time Notifications Bell -->
+            <div class="notification-bell-container">
+              <button id="notif-bell-btn" class="notification-bell-btn" title="Notifications">
+                <i data-lucide="bell"></i>
+                <span id="notif-badge" class="badge-count">0</span>
+              </button>
+              
+              <!-- Notifications drop-down window -->
+              <div id="notif-dropdown" class="notification-dropdown">
+                <div class="notification-header">
+                  <h4>Notifications</h4>
+                  <button id="mark-all-read-btn" class="mark-read-btn">Mark all read</button>
+                </div>
+                <div id="notif-list" class="notification-list">
+                  <!-- Injected dynamically -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Profile Info Widget -->
+            <div class="admin-profile-quick">
+              <div class="admin-avatar">AV</div>
+              <div class="admin-info">
+                <span class="admin-name">Alex Vance</span>
+                <span class="admin-role">Administrator</span>
+              </div>
+            </div>
+
+          </div>
+        </header>
+
+        <!-- View Content Area -->
+        <div class="content-area">
+
+          <!-- TAB: Dashboard Home (#dashboard) -->
+          <div id="dashboard" class="tab-content active">
+            
+            <!-- Stat Cards Row -->
+            <div class="stats-grid animate-fade">
+              
+              <div class="glass-card stat-card">
+                <div class="stat-info">
+                  <span class="stat-label">Total Submissions</span>
+                  <span id="stat-total-leads" class="stat-value">0</span>
+                  <span class="stat-trend up">
+                    <i data-lucide="trending-up" style="width: 14px; height: 14px;"></i>
+                    <span>+100% database lifetime</span>
+                  </span>
+                </div>
+                <div class="stat-icon-box">
+                  <i data-lucide="database"></i>
+                </div>
+              </div>
+
+              <div class="glass-card stat-card">
+                <div class="stat-info">
+                  <span class="stat-label">Today's Leads</span>
+                  <span id="stat-today-leads" class="stat-value">0</span>
+                  <span class="stat-trend up">
+                    <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+                    <span>New submissions today</span>
+                  </span>
+                </div>
+                <div class="stat-icon-box">
+                  <i data-lucide="calendar"></i>
+                </div>
+              </div>
+
+              <div class="glass-card stat-card">
+                <div class="stat-info">
+                  <span class="stat-label">Gender Split</span>
+                  <span id="stat-gender-split" class="stat-value">0% / 0%</span>
+                  <span class="stat-trend">
+                    <i data-lucide="users" style="width: 14px; height: 14px;"></i>
+                    <span>Male / Female ratio</span>
+                  </span>
+                </div>
+                <div class="stat-icon-box">
+                  <i data-lucide="user-check"></i>
+                </div>
+              </div>
+
+              <div class="glass-card stat-card">
+                <div class="stat-info">
+                  <span class="stat-label">New Leads (Pending Review)</span>
+                  <span id="stat-new-leads" class="stat-value">0</span>
+                  <span class="stat-trend down" style="color: var(--accent);">
+                    <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
+                    <span>Awaiting contacted status</span>
+                  </span>
+                </div>
+                <div class="stat-icon-box">
+                  <i data-lucide="inbox"></i>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Home Section Split -->
+            <div class="home-section-grid animate-slide" style="animation-delay: 0.1s;">
+              
+              <!-- Recent leads table -->
+              <div class="glass-card recent-leads-card">
+                <div class="card-header">
+                  <h3>Latest Form Submissions</h3>
+                  <a href="#leads" class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                    View Database
+                    <i data-lucide="arrow-right" style="width: 12px; height: 12px;"></i>
+                  </a>
+                </div>
+                
+                <div class="table-wrapper">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Submitted On</th>
+                      </tr>
+                    </thead>
+                    <tbody id="recent-leads-body">
+                      <!-- Injected dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Quick guide tips -->
+              <div class="glass-card" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                <div class="card-header" style="margin-bottom: 0;">
+                  <h3>System Insights</h3>
+                </div>
+                <div style="border-left: 2px solid var(--accent); padding-left: 1rem;">
+                  <h5 style="color: #fff; margin-bottom: 0.25rem; font-size: 0.9rem;">Real-time Synchronization</h5>
+                  <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">Keep the survey page open in another window. Once details are submitted, they will sync automatically onto your screen without manual refreshes.</p>
+                </div>
+                <div style="border-left: 2px solid var(--success); padding-left: 1rem;">
+                  <h5 style="color: #fff; margin-bottom: 0.25rem; font-size: 0.9rem;">CSV Export</h5>
+                  <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">Extract filtered database selections by clicking the Export button on the Leads database page.</p>
+                </div>
+                <div style="border-left: 2px solid var(--warning); padding-left: 1rem;">
+                  <h5 style="color: #fff; margin-bottom: 0.25rem; font-size: 0.9rem;">Lead Management</h5>
+                  <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">Update candidate status fields inline to track recruitment progress inside the Leads panel.</p>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- TAB: All Leads (#leads) -->
+          <div id="leads" class="tab-content">
+            
+            <div class="glass-card animate-fade">
+              
+              <!-- Search and filter filters bar -->
+              <div class="leads-control-header">
+                <div class="search-filter-box">
+                  <div class="search-wrapper">
+                    <i data-lucide="search"></i>
+                    <input type="text" id="leads-search" class="input-field search-input" placeholder="Search by name, email, phone or address...">
+                  </div>
+                  
+                  <select id="filter-gender" class="filter-select">
+                    <option value="all">Gender: All</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+
+                  <select id="filter-status" class="filter-select">
+                    <option value="all">Status: All</option>
+                    <option value="new">NEW</option>
+                    <option value="contacted">CONTACTED</option>
+                    <option value="hired">HIRED</option>
+                    <option value="rejected">REJECTED</option>
+                  </select>
+
+                  <select id="filter-date" class="filter-select">
+                    <option value="all">Timeline: All</option>
+                    <option value="today">Today</option>
+                    <option value="week">Past 7 Days</option>
+                    <option value="month">Past 30 Days</option>
+                  </select>
+                </div>
+
+                <div class="leads-actions">
+                  <button id="export-csv-btn" class="btn-secondary" style="display: flex; align-items: center; gap: 0.5rem;" title="Download as CSV">
+                    <i data-lucide="download"></i>
+                    Export CSV
+                  </button>
+                </div>
+              </div>
+
+              <!-- Bulk Action Alert Panel -->
+              <div id="bulk-actions-bar" class="bulk-actions-bar">
+                <span id="bulk-count" class="bulk-selected-count">0 leads selected</span>
+                <button id="bulk-delete-btn" class="btn-primary" style="background: var(--danger); box-shadow: 0 4px 14px var(--danger-glow); font-size: 0.85rem; padding: 0.5rem 1rem;">
+                  <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                  Delete Selected
+                </button>
+              </div>
+
+              <!-- Data Table -->
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width: 40px;">
+                        <input type="checkbox" id="select-all-leads" title="Select All">
+                      </th>
+                      <th>Name</th>
+                      <th>Gender</th>
+                      <th>Email</th>
+                      <th>Mobile</th>
+                      <th>Address</th>
+                      <th>Age</th>
+                      <th>Submitted On</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="leads-table-body">
+                    <!-- Injected dynamically -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Table footer pagination -->
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+                <span id="page-info" style="font-size: 0.85rem; color: var(--text-secondary);">Page 1 of 1 (0 total)</span>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button id="prev-page-btn" class="btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" disabled>Previous</button>
+                  <button id="next-page-btn" class="btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" disabled>Next</button>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- TAB: Analytics (#analytics) -->
+          <div id="analytics" class="tab-content">
+            
+            <!-- Charts top row -->
+            <div class="analytics-grid-top">
+              
+              <div class="glass-card chart-card animate-fade">
+                <div class="card-header">
+                  <h3>Daily Survey Registration Trends</h3>
+                </div>
+                <div class="chart-container">
+                  <canvas id="chart-daily-submissions"></canvas>
+                </div>
+              </div>
+
+              <div class="glass-card chart-card animate-fade" style="animation-delay: 0.1s;">
+                <div class="card-header">
+                  <h3>Gender Demographics</h3>
+                </div>
+                <div class="chart-container">
+                  <canvas id="chart-gender-donut"></canvas>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Charts bottom row -->
+            <div class="analytics-grid-bottom animate-slide" style="animation-delay: 0.2s;">
+              
+              <div class="glass-card chart-card">
+                <div class="card-header">
+                  <h3>Submission Growth Trends</h3>
+                </div>
+                <div class="chart-container">
+                  <canvas id="chart-weekly-growth"></canvas>
+                </div>
+              </div>
+
+              <div class="glass-card chart-card">
+                <div class="card-header">
+                  <h3>Age Group Distributions</h3>
+                </div>
+                <div class="chart-container">
+                  <canvas id="chart-age-bracket"></canvas>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- TAB: Settings (#settings) -->
+          <div id="settings" class="tab-content">
+            
+            <div class="settings-grid animate-fade">
+              
+              <!-- Left side tabs menu -->
+              <div class="glass-card settings-nav-card">
+                <div class="settings-nav-item active">Account Settings</div>
+                <div class="settings-nav-item" style="opacity: 0.5; pointer-events: none;">Notification Settings</div>
+                <div class="settings-nav-item" style="opacity: 0.5; pointer-events: none;">Access Controls</div>
+              </div>
+
+              <!-- Right side details view -->
+              <div class="settings-content-wrapper">
+                
+                <!-- Supabase Cloud DB Settings -->
+                <div class="glass-card">
+                  <div class="card-header" style="margin-bottom: 1.5rem;">
+                    <h3>Supabase Integration</h3>
+                  </div>
+                  
+                  <form id="settings-supabase-form">
+                    <div class="form-group">
+                      <label for="settings-supabase-url">Supabase Project URL</label>
+                      <input type="url" id="settings-supabase-url" class="input-field" placeholder="https://your-project.supabase.co" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="settings-supabase-key">Supabase Anon Key</label>
+                      <input type="password" id="settings-supabase-key" class="input-field" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." required>
+                    </div>
+                    <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+                      <button type="submit" class="btn-primary">Connect Supabase Database</button>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- Profile Settings -->
+                <div class="glass-card">
+                  <div class="card-header" style="margin-bottom: 1.5rem;">
+                    <h3>Administrator Details</h3>
+                  </div>
+                  
+                  <form id="settings-profile-form">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                      <div class="form-group">
+                        <label for="settings-profile-name">Full Display Name</label>
+                        <input type="text" id="settings-profile-name" class="input-field" value="" required>
+                      </div>
+                      <div class="form-group">
+                        <label for="settings-profile-email">Official Email</label>
+                        <input type="email" id="settings-profile-email" class="input-field" value="" required>
+                      </div>
+                    </div>
+                    <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+                      <button type="submit" class="btn-primary">Save Profile Info</button>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- Password update settings -->
+                <div class="glass-card">
+                  <div class="card-header" style="margin-bottom: 1.5rem;">
+                    <h3>Change Password</h3>
+                  </div>
+                  
+                  <form id="settings-password-form">
+                    <div class="form-group">
+                      <label for="settings-current-pwd">Current Password</label>
+                      <input type="password" id="settings-current-pwd" class="input-field" placeholder="Enter current password" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="settings-new-pwd">New Password</label>
+                      <input type="password" id="settings-new-pwd" class="input-field" placeholder="Enter new password" required minlength="6">
+                    </div>
+                    <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+                      <button type="submit" class="btn-primary">Update Password</button>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- Alert settings toggles -->
+                <div class="glass-card">
+                  <div class="card-header" style="margin-bottom: 1rem;">
+                    <h3>System Notification Toggles</h3>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0;">
+                      <div>
+                        <h5 style="color: #fff; font-size: 0.95rem; margin-bottom: 0.15rem;">Toast Notifications</h5>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary);">Show popup notifications on new leads submissions in real-time.</p>
+                      </div>
+                      <label class="radio-label" style="cursor: pointer;">
+                        <input type="checkbox" id="settings-toggle-toast" style="width: 20px; height: 20px; border-radius: 4px; accent-color: var(--accent);" checked>
+                      </label>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0; border-top: 1px solid var(--border-color);">
+                      <div>
+                        <h5 style="color: #fff; font-size: 0.95rem; margin-bottom: 0.15rem;">Audio Beep Alerts</h5>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary);">Play a short synthesized beep in the browser upon a new submission.</p>
+                      </div>
+                      <label class="radio-label" style="cursor: pointer;">
+                        <input type="checkbox" id="settings-toggle-sound" style="width: 20px; height: 20px; border-radius: 4px; accent-color: var(--accent);" checked>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- System database tools -->
+                <div class="glass-card" style="border-color: rgba(239, 68, 68, 0.25);">
+                  <div class="card-header" style="margin-bottom: 1rem;">
+                    <h3 style="color: var(--danger);">System Maintenance</h3>
+                  </div>
+                  <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.4;">Perform administrative operations on the CRM database. Resetting will restore default dummy records. Wiping removes everything.</p>
+                  <div style="display: flex; gap: 1rem;">
+                    <button id="settings-seed-db-btn" class="btn-secondary" style="border-color: var(--primary); color: var(--accent);">Reset to Seed Leads</button>
+                    <button id="settings-wipe-db-btn" class="btn-primary" style="background: var(--danger); box-shadow: 0 4px 14px var(--danger-glow);">Wipe All Leads Records</button>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </main>
+
+    </div>
+
+    <!-- 3. MODAL POPUP DIALOG WRAPPER -->
+    <div id="modal-overlay" class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="modal-title">Modal Title</h3>
+          <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body" id="modal-body">
+          <!-- Injected dynamically -->
+        </div>
+        <div class="modal-footer" id="modal-footer">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- JavaScript Controllers Core -->
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/leads.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+    document.getElementById('modal-close-btn').addEventListener('click', () => {
+      document.getElementById('modal-overlay').classList.remove('active');
+    });
+  </script>
+</body>
+</html>

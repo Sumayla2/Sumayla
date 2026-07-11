@@ -1,0 +1,20 @@
+{
+  "name": "wfh-crm-dashboard",
+  "version": "1.0.0",
+  "description": "Premium Work From Home CRM Dashboard and Public Survey Application",
+  "main": "admin.html",
+  "scripts": {
+    "start": "lite-server"
+  },
+  "keywords": [
+    "crm",
+    "dashboard",
+    "wfh",
+    "survey"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "lite-server": "^2.6.1"
+  }
+}
