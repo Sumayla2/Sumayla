@@ -191,7 +191,7 @@
           mobile: leadData.mobile,
           address: leadData.address || '',
           age: parseInt(leadData.age) || 25,
-          submittedOn: newLead?.submittedOn || new Date().toISOString(),
+          submittedOn: leadData.submittedOn || new Date().toISOString(),
           status: 'new'
         };
 
