@@ -273,16 +273,30 @@
         e.preventDefault();
         const updatedName = document.getElementById('settings-profile-name').value;
         const updatedEmail = document.getElementById('settings-profile-email').value;
-        const updatedUsername = document.getElementById('settings-profile-username').value.trim();
 
         window.Auth.updateProfile({
           name: updatedName,
-          email: updatedEmail,
+          email: updatedEmail
+        });
+
+        if (window.Notifications) {
+          window.Notifications.showToast('Details Updated', 'Administrator details saved.', 'success');
+        }
+      });
+    }
+
+    const usernameForm = document.getElementById('settings-username-form');
+    if (usernameForm) {
+      usernameForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const updatedUsername = document.getElementById('settings-profile-username').value.trim();
+
+        window.Auth.updateProfile({
           username: updatedUsername
         });
 
         if (window.Notifications) {
-          window.Notifications.showToast('Profile Updated', 'Administrator profile was saved.', 'success');
+          window.Notifications.showToast('Username Updated', 'Login username changed successfully.', 'success');
         }
       });
     }
