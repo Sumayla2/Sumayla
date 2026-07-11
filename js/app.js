@@ -132,8 +132,10 @@
 
     const setProfileName = document.getElementById('settings-profile-name');
     const setProfileEmail = document.getElementById('settings-profile-email');
+    const setProfileUsername = document.getElementById('settings-profile-username');
     if (setProfileName) setProfileName.value = user.name;
     if (setProfileEmail) setProfileEmail.value = user.email;
+    if (setProfileUsername) setProfileUsername.value = user.username || 'admin';
   }
 
   // Hash Router switching tabs
@@ -271,10 +273,12 @@
         e.preventDefault();
         const updatedName = document.getElementById('settings-profile-name').value;
         const updatedEmail = document.getElementById('settings-profile-email').value;
+        const updatedUsername = document.getElementById('settings-profile-username').value.trim();
 
         window.Auth.updateProfile({
           name: updatedName,
-          email: updatedEmail
+          email: updatedEmail,
+          username: updatedUsername
         });
 
         if (window.Notifications) {

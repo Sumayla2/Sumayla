@@ -54,16 +54,22 @@
       return new Promise((resolve, reject) => {
         // Simulate a small API network delay for realism
         setTimeout(() => {
-          if (username.trim().toLowerCase() === 'admin' && password === 'password123') {
-            const token = generateFakeJWT('admin', 'administrator');
+          const userProfile = JSON.parse(localStorage.getItem(USER_KEY)) || { username: 'admin' };
+          const savedUsername = userProfile.username || 'admin';
+          const savedPassword = localStorage.getItem('crm_admin_password') || 'password123';
+
+          if (username.trim().toLowerCase() === savedUsername.trim().toLowerCase() && password === savedPassword) {
+            const token = generateFakeJWT(savedUsername, 'administrator');
             localStorage.setItem(TOKEN_KEY, token);
-            localStorage.setItem(USER_KEY, JSON.stringify({
-              name: 'Alex Vance',
-              username: 'admin',
-              role: 'Senior Admin',
-              email: 'alex.vance@wfhadmin.com',
-              joined: '2026-01-10'
-            }));
+            if (!localStorage.getItem(USER_KEY)) {
+              localStorage.setItem(USER_KEY, JSON.stringify({
+                name: 'Alex Vance',
+                username: 'admin',
+                role: 'Senior Admin',
+                email: 'alex.vance@wfhadmin.com',
+                joined: '2026-01-10'
+              }));
+            }
             
             // Fire custom event
             window.dispatchEvent(new CustomEvent('auth_state_change', { detail: { authenticated: true } }));
