@@ -10,39 +10,8 @@
   overflow-y: auto;
 }
 
-.survey-split-wrapper {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 1200px;
-  gap: 3rem;
-  margin: auto;
-  z-index: 2;
-}
-
-.spline-animation-container {
-  width: 45%;
-  height: 600px;
-  border-radius: 16px;
-  overflow: hidden;
-  position: relative;
-  background: rgba(255, 255, 255, 0.01);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.spline-iframe {
-  border: none;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-}
-
 .survey-card {
-  width: 55%;
+  width: 100%;
   max-width: 650px;
   padding: 2.5rem;
   box-shadow: var(--shadow-lg), 0 0 50px rgba(0, 163, 255, 0.05);
@@ -185,24 +154,6 @@
   line-height: 1.5;
 }
 
-@media (max-width: 1024px) {
-  .survey-split-wrapper {
-    flex-direction: column;
-    gap: 2rem;
-    padding: 1rem;
-  }
-  
-  .spline-animation-container {
-    width: 100%;
-    height: 450px;
-  }
-  
-  .survey-card {
-    width: 100%;
-    max-width: 600px;
-  }
-}
-
 @media (max-width: 600px) {
   .survey-form-grid {
     grid-template-columns: 1fr;
@@ -212,8 +163,5 @@
   }
   .survey-card {
     padding: 1.5rem;
-  }
-  .spline-animation-container {
-    height: 320px;
   }
 }
