@@ -7,9 +7,12 @@
 
   let supabaseClient = null;
 
-  // 1. Load keys and check if Supabase is configured
-  const savedUrl = localStorage.getItem(SB_URL_KEY);
-  const savedKey = localStorage.getItem(SB_KEY_KEY);
+  // 1. Load keys (fallback to default production Supabase keys for public visitors)
+  const defaultUrl = 'https://sutzkdqdkjgimllrujhj.supabase.co';
+  const defaultKey = 'sb_publishable_7iom0mX1buy_Xnjjuy-_ZA_xvWCKypp';
+
+  const savedUrl = localStorage.getItem(SB_URL_KEY) || defaultUrl;
+  const savedKey = localStorage.getItem(SB_KEY_KEY) || defaultKey;
 
   if (savedUrl && savedKey && window.supabase) {
     try {
